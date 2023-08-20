@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "fastapi-contacts-auth-mail"
+version = "0.1.0"
+description = ""
+authors = ["Roy Bebru <RoyBebru@gmail.com>"]
+readme = "README.md"
+packages = [{include = "fastapi_contacts_auth_mail"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = {extras = ["all"], version = "^0.101.1"}
+fastapi-mail = {extras = ["all"], version = "^1.4.1"}
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+libgravatar = "^1.0.4"
+fastapi-limiter = "^0.1.5"
+sqlalchemy = "^2.0.20"
+psycopg2-binary = "^2.9.7"
+cloudinary = "^1.34.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
