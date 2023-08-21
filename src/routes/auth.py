@@ -76,7 +76,6 @@ async def reset_password(body: ResetPasswordModel, background_tasks: BackgroundT
 async def renew_password_new(token: str,
                 password: Annotated[str, Form()],
                 db: Session = Depends(get_db)):
-    print(f"[d] password={password}")
     email = await auth_service.get_email_from_token(token)
     user = await repository_users.get_user_by_email(email, db)
     if user is None:
