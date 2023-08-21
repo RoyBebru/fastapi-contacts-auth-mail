@@ -47,12 +47,20 @@ class UserDb(BaseModel):
     avatar: str
 
     class Config:
-        # orm_mode = True
         from_attributes = True
+
 
 class ResponseUserModel(BaseModel):
     user: UserDb
     detail: str = "User successfully created"
+
+
+class ResetPasswordModel(BaseModel):
+    email: EmailStr
+
+
+class ResponseResetPasswordModel(BaseModel):
+    detail: str = "Email is successfully sent to User"
 
 
 class TokenModel(BaseModel):

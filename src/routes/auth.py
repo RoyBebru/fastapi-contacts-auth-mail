@@ -1,15 +1,17 @@
 from fastapi import APIRouter, HTTPException, Depends, status, Security
-from fastapi import BackgroundTasks, Request
+from fastapi import BackgroundTasks, Request, Form
 from fastapi.security import OAuth2PasswordRequestForm, HTTPAuthorizationCredentials
 from fastapi.security import HTTPBearer
 from sqlalchemy.orm import Session
-
+from typing import Annotated
 
 from src.database.db import get_db
 from src.schemas import UserModel, ResponseUserModel, TokenModel, RequestEmail
+from src.schemas import ResetPasswordModel
+from src.schemas import ResponseResetPasswordModel
 from src.repository import users as repository_users
 from src.services.auth import auth_service
-from src.services.email import send_email
+from src.services.email import send_email_verification, send_email_reset_password
 
 
 router = APIRouter(prefix='/auth', tags=["auth"])
@@ -26,7 +28,9 @@ async def signup(body: UserModel, background_tasks: BackgroundTasks, request: Re
                             detail="Account already exists")
     body.password = auth_service.get_password_hash(body.password)
     new_user = await repository_users.create_user(body, db)
-    background_tasks.add_task(send_email, new_user.email, new_user.username, request.base_url)
+    background_tasks.add_task(send_email_verification, new_user.email,
+                              new_user.username,
+                              request.base_url)
     return {"user": new_user,
             "detail": "User successfully created. Check your email for confirmation."}
 
@@ -50,6 +54,37 @@ async def login(body: OAuth2PasswordRequestForm = Depends(),
     await repository_users.update_token(user, refresh_token, db)
     return {"access_token": access_token, "refresh_token": refresh_token,
             "token_type": "bearer"}
+
+
+@router.post("/reset_password", response_model=ResponseResetPasswordModel,
+             status_code=status.HTTP_205_RESET_CONTENT)
+async def reset_password(body: ResetPasswordModel, background_tasks: BackgroundTasks,
+                         request: Request,
+                         db: Session = Depends(get_db)):
+    exist_user = await repository_users.get_user_by_email(body.email, db)
+    if not exist_user:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
+                            detail="Account is absent")
+    background_tasks.add_task(send_email_reset_password, exist_user.email,
+                              exist_user.username,
+                              request.base_url)
+    return {"detail": "User is successfully informed how to reset password. "
+                      "Check your email for instruction."}
+
+
+@router.post("/reset_password_new/{token}")
+async def renew_password_new(token: str,
+                password: Annotated[str, Form()],
+                db: Session = Depends(get_db)):
+    print(f"[d] password={password}")
+    email = await auth_service.get_email_from_token(token)
+    user = await repository_users.get_user_by_email(email, db)
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                            detail="Invalid email")
+    password = auth_service.get_password_hash(password)
+    await repository_users.renew_password_new(user, password, db)
+    return {"detail": "User password is successfully changed."}
 
 
 @router.get('/refresh_token', response_model=TokenModel)
@@ -92,5 +127,6 @@ async def request_email(body: RequestEmail, background_tasks: BackgroundTasks,
     if user.confirmed:
         return {"message": "Your email is already confirmed"}
     if user:
-        background_tasks.add_task(send_email, user.email, user.username, request.base_url)
+        background_tasks.add_task(send_email_verification, user.email, user.username,
+                                  request.base_url)
     return {"message": "Check your email for confirmation."}
