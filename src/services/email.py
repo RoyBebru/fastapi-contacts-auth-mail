@@ -23,6 +23,18 @@ conf = ConnectionConfig(
 
 
 async def send_email_verification(email: EmailStr, username: str, host: str):
+    '''
+    Sends verification email. Offen it planned as bacground task.
+
+    :param email: Email address for sending.
+    :type email: EmailStr
+    :param username: Nickname of user who must receive verification email.
+    :type username: str
+    :param host: URL which must wait verification respond.
+    :type host: str
+    :return: Nothing.
+    :rtype: None
+    '''
     try:
         token_verification = auth_service.create_email_token({"sub": email})
         message = MessageSchema(
@@ -40,6 +52,19 @@ async def send_email_verification(email: EmailStr, username: str, host: str):
 
 
 async def send_email_reset_password(email: EmailStr, username: str, host: str):
+    '''
+    Sends email with form to change password directly from mailer. Offen it planned
+    as bacground task.
+
+    :param email: Email address for sending.
+    :type email: EmailStr
+    :param username: Nickname of user who must receive email.
+    :type username: str
+    :param host: URL which must wait respond.
+    :type host: str
+    :return: Nothing.
+    :rtype: None
+    '''
     try:
         token_verification = auth_service.create_email_token({"sub": email}, days=1)
         message = MessageSchema(

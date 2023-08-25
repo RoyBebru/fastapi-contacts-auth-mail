@@ -1,0 +1,4 @@
+#!/bin/sh
+
+cd ..
+./do.pytests.sh

@@ -1,0 +1,8 @@
+{
+    "name": "Lara",
+    "lastname": "Craft",
+    "email": "LaraCraft@gmail.com",
+    "phone": "(304) 625-2000",
+    "birthday": "2001-11-27",
+    "note": "The game must be continued."
+}
